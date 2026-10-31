@@ -1,0 +1,31 @@
+# -*- coding: utf-8 -*-
+{
+    'name': 'Subscription Billing - Brightloop',
+    'version': '19.0.1.0.0',
+    'category': 'Accounting/Subscription',
+    'summary': 'Recurring Invoicing, Taxes, Discounts, Payments and Finance Reporting for Brightloop Software',
+    'description': """ Subscription Billing & Financial Engine """,
+    'author': '',
+    'depends': [
+        'base',
+        'mail',
+        'portal',
+        'subscription_sales',
+    ],
+    'data': [
+        'security/subscription_security.xml',
+        'security/ir.model.access.csv',
+        'data/ir_sequence_data.xml',
+        'data/ir_cron_data.xml',
+        'views/subscription_tax_views.xml',
+        'views/subscription_discount_views.xml',
+        'views/subscription_invoice_views.xml',
+        'views/subscription_payment_views.xml',
+        'views/subscription_subscription_views.xml',
+        'views/subscription_finance_dashboard_views.xml',
+        'views/subscription_menus.xml',
+    ],
+    'installable': True,
+    'application': True,
+    'license': 'LGPL-3',
+}

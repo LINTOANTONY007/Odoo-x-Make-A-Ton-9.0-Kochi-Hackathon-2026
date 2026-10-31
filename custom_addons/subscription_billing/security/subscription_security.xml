@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Portal User Record Rule: Customers see only their own invoices -->
+        <record id="subscription_invoice_portal_rule" model="ir.rule">
+            <field name="name">Portal Customer Invoices</field>
+            <field name="model_id" ref="model_subscription_invoice"/>
+            <field name="domain_force">[('partner_id', 'child_of', [user.partner_id.commercial_partner_id.id])]</field>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Staff Access to all invoices -->
+        <record id="subscription_invoice_user_rule" model="ir.rule">
+            <field name="name">Staff All Invoices</field>
+            <field name="model_id" ref="model_subscription_invoice"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('subscription_catalog.group_subscription_user'))]"/>
+        </record>
+
+        <!-- Multi-Company Rule for Invoices -->
+        <record id="subscription_invoice_company_rule" model="ir.rule">
+            <field name="name">Invoice Multi-Company Rule</field>
+            <field name="model_id" ref="model_subscription_invoice"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
