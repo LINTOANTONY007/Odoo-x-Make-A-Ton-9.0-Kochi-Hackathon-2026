@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Subscription Catalog - Brightloop',
+    'name': 'Subscription Catalog',
     'version': '19.0.1.0.0',
     'category': 'Sales/Subscription',
-    'summary': 'Subscription Plans, Products, Variants and Access Control for Brightloop Software',
+    'summary': 'Subscription Plans, Products, Variants and Access Control',
     'description': """ Subscription Catalog Management """,
     'author': '',
     'depends': [
