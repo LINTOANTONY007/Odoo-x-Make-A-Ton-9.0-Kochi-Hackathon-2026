@@ -153,7 +153,7 @@
                 <filter name="filter_confirmed" string="Confirmed" domain="[('stage', '=', 'confirmed')]"/>
                 <filter name="filter_paused" string="Paused" domain="[('stage', '=', 'paused')]"/>
                 <filter name="filter_closed" string="Closed" domain="[('stage', '=', 'closed')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_stage" string="Status" context="{'group_by': 'stage'}"/>
                     <filter name="group_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
                     <filter name="group_plan" string="Plan" context="{'group_by': 'plan_id'}"/>

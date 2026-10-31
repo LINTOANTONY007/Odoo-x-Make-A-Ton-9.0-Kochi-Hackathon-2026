@@ -62,6 +62,7 @@ class SubscriptionPlan(models.Model):
     is_available = fields.Boolean(
         string='Is Available',
         compute='_compute_is_available',
+        search='_search_is_available',
         store=False,
         help="Indicates whether the plan is currently available based on dates and active status."
     )
@@ -107,6 +108,21 @@ class SubscriptionPlan(models.Model):
             valid_start = not plan.start_date or plan.start_date <= today
             valid_end = not plan.end_date or plan.end_date >= today
             plan.is_available = valid_start and valid_end
+
+    def _search_is_available(self, operator, value):
+        today = fields.Date.context_today(self)
+        if (operator == '=' and value) or (operator == '!=' and not value):
+            return [
+                ('active', '=', True),
+                '|', ('start_date', '<=', today), ('start_date', '=', False),
+                '|', ('end_date', '>=', today), ('end_date', '=', False),
+            ]
+        else:
+            return [
+                '|', ('active', '=', False),
+                '|', ('start_date', '>', today),
+                ('end_date', '<', today),
+            ]
 
     @api.constrains('start_date', 'end_date')
     def _check_dates(self):
