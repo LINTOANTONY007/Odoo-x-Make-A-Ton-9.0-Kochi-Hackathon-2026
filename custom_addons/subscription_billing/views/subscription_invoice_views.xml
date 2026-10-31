@@ -8,6 +8,7 @@
             <list string="Invoices"
                   decoration-muted="state == 'draft'"
                   decoration-info="state == 'confirmed' and not is_overdue"
+                  decoration-warning="state == 'partial'"
                   decoration-danger="is_overdue"
                   decoration-success="state == 'paid'">
                 <field name="name"/>
@@ -23,6 +24,7 @@
                 <field name="state" widget="badge"
                        decoration-muted="state == 'draft'"
                        decoration-info="state == 'confirmed'"
+                       decoration-warning="state == 'partial'"
                        decoration-success="state == 'paid'"
                        decoration-danger="state == 'cancelled'"/>
             </list>
@@ -41,24 +43,30 @@
                             type="object"
                             class="oe_highlight"
                             invisible="state != 'draft'"/>
+                    <button name="action_mark_as_done"
+                            string="Mark as Done"
+                            type="object"
+                            class="oe_highlight btn-success"
+                            invisible="state not in ('confirmed', 'partial')"/>
                     <button name="action_send"
                             string="Send"
                             type="object"
                             class="oe_highlight"
-                            invisible="state not in ('confirmed', 'paid')"/>
+                            invisible="state not in ('confirmed', 'partial', 'paid')"/>
                     <button name="action_print"
                             string="Print"
                             type="object"
-                            invisible="state not in ('confirmed', 'paid')"/>
+                            invisible="state not in ('confirmed', 'partial', 'paid')"/>
                     <button name="action_cancel"
                             string="Cancel"
                             type="object"
                             invisible="state in ('paid', 'cancelled')"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,paid"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,partial,paid"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box"/>
                     <widget name="web_ribbon" title="Paid" bg_color="text-bg-success" invisible="state != 'paid'"/>
+                    <widget name="web_ribbon" title="Partially Paid" bg_color="text-bg-warning" invisible="state != 'partial'"/>
                     <widget name="web_ribbon" title="Overdue" bg_color="text-bg-danger" invisible="not is_overdue"/>
                     <div class="oe_title">
                         <label for="name" class="oe_edit_only"/>
@@ -68,20 +76,20 @@
                     </div>
                     <group>
                         <group name="header_left">
-                            <field name="partner_id" widget="res_partner_many2one" context="{'show_address': 1}"/>
-                            <field name="subscription_id" options="{'no_create': True}"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="partner_id" widget="res_partner_many2one" context="{'show_address': 1}" readonly="state != 'draft'"/>
+                            <field name="subscription_id" options="{'no_create': True}" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
                         </group>
                         <group name="header_right">
-                            <field name="invoice_date"/>
-                            <field name="due_date"/>
-                            <field name="payment_terms"/>
-                            <field name="applied_discount_id" invisible="not applied_discount_id"/>
+                            <field name="invoice_date" readonly="state != 'draft'"/>
+                            <field name="due_date" readonly="state != 'draft'"/>
+                            <field name="payment_terms" readonly="state != 'draft'"/>
+                            <field name="applied_discount_id" invisible="not applied_discount_id" readonly="state != 'draft'"/>
                         </group>
                     </group>
                     <notebook>
                         <page name="lines" string="Invoice Lines">
-                            <field name="line_ids">
+                            <field name="line_ids" readonly="state != 'draft'">
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id"/>
@@ -112,7 +120,7 @@
                             </group>
                         </page>
                         <page name="payments" string="Recorded Payments">
-                            <field name="payment_ids">
+                            <field name="payment_ids" readonly="state in ('paid', 'cancelled')">
                                 <list editable="bottom">
                                     <field name="name" readonly="1"/>
                                     <field name="payment_method"/>
@@ -141,6 +149,7 @@
                 <field name="subscription_id"/>
                 <separator/>
                 <filter name="filter_confirmed" string="Confirmed (Unpaid)" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_partial" string="Partially Paid" domain="[('state', '=', 'partial')]"/>
                 <filter name="filter_overdue" string="Overdue Invoices" domain="[('is_overdue', '=', True)]"/>
                 <filter name="filter_paid" string="Fully Paid" domain="[('state', '=', 'paid')]"/>
                 <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>

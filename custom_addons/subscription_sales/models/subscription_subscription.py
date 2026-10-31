@@ -49,7 +49,7 @@ class SubscriptionSubscription(models.Model):
         string='Subscription Plan',
         required=True,
         tracking=True,
-        domain="[('active', '=', True)]"
+        domain="[('active', '=', True), ('is_start_date_reached', '=', True), ('is_end_date_valid', '=', True)]"
     )
     template_id = fields.Many2one(
         'subscription.quotation.template',
@@ -129,6 +129,14 @@ class SubscriptionSubscription(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code('subscription.subscription') or _('New')
         return super().create(vals_list)
 
+    def write(self, vals):
+        sensitive_fields = {'line_ids', 'partner_id', 'plan_id', 'template_id', 'company_id', 'start_date'}
+        if sensitive_fields.intersection(vals.keys()):
+            for sub in self:
+                if sub.stage not in ('draft', 'quotation'):
+                    raise UserError(_("You cannot modify order lines, plan, customer or agreement terms on a confirmed subscription."))
+        return super().write(vals)
+
     @api.depends('line_ids.price_subtotal', 'line_ids.price_total')
     def _compute_amounts(self):
         for sub in self:
@@ -188,6 +196,16 @@ class SubscriptionSubscription(models.Model):
             raise ValidationError(_(
                 "Total quantity (%s) is less than the plan minimum required (%s)."
             ) % (total_qty, self.plan_id.min_quantity))
+
+        if self.plan_id:
+            if not self.plan_id.is_start_date_reached:
+                raise ValidationError(_(
+                    "The selected subscription plan '%s' is not yet available because its start date (%s) has not been reached."
+                ) % (self.plan_id.name, self.plan_id.start_date))
+            if not self.plan_id.is_end_date_valid:
+                raise ValidationError(_(
+                    "The selected subscription plan '%s' cannot be used because its availability end date (%s) has passed."
+                ) % (self.plan_id.name, self.plan_id.end_date))
 
         self.stage = 'confirmed'
         self.message_post(body=_("Subscription offer has been confirmed by customer."))

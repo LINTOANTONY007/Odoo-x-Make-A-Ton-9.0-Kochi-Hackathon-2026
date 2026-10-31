@@ -33,7 +33,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="invoice_id" domain="[('state', '=', 'confirmed')]"/>
+                            <field name="invoice_id" domain="[('state', 'in', ('confirmed', 'partial'))]"/>
                             <field name="partner_id"/>
                             <field name="payment_method"/>
                         </group>

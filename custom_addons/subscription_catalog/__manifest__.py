@@ -20,6 +20,7 @@
         'views/subscription_menus.xml',
         'views/subscription_plan_views.xml',
         'views/subscription_product_views.xml',
+        'views/subscription_tax_views.xml',
     ],
     'installable': True,
     'application': False,
