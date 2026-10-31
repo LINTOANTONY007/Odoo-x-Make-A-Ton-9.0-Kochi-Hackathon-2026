@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_password_security" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.password.security</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="auth_password_policy.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='minlength']/.." position="after">
+                <setting help="Minimum number of lowercase letters passwords must contain">
+                    <field name="password_lower"/>
+                </setting>
+                <setting help="Minimum number of uppercase letters passwords must contain">
+                    <field name="password_upper"/>
+                </setting>
+                <setting help="Minimum number of special characters passwords must contain">
+                    <field name="password_special"/>
+                </setting>
+                <setting help="Minimum number of numeric digits passwords must contain">
+                    <field name="password_numeric"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>
