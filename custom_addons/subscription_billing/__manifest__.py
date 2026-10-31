@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Subscription Billing - Brightloop',
+    'name': 'Subscription Billing',
     'version': '19.0.1.0.0',
     'category': 'Accounting/Subscription',
-    'summary': 'Recurring Invoicing, Taxes, Discounts, Payments and Finance Reporting for Brightloop Software',
+    'summary': 'Recurring Invoicing, Taxes, Discounts, Payments and Finance Reporting',
     'description': """ Subscription Billing & Financial Engine """,
     'author': '',
     'depends': [
