@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Module Category -->
+        <record id="module_category_subscription_management" model="ir.module.category">
+            <field name="name">Subscription Management</field>
+            <field name="description">User access levels for Subscription Management System</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Internal Staff Group -->
+        <record id="group_subscription_user" model="res.groups">
+            <field name="name">Staff (User)</field>
+            <field name="category_id" ref="module_category_subscription_management"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Internal staff handling day-to-day subscription operations with limited access.</field>
+        </record>
+
+        <!-- Administrator Group -->
+        <record id="group_subscription_admin" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="category_id" ref="module_category_subscription_management"/>
+            <field name="implied_ids" eval="[(4, ref('group_subscription_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+            <field name="comment">Admin controlling the entire subscription platform, products, plans, staff and discounts.</field>
+        </record>
+    </data>
+</odoo>

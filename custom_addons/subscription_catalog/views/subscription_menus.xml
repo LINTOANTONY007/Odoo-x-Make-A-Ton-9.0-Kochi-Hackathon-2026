@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Main Application Menu -->
+    <menuitem id="menu_subscription_root"
+              name="Subscriptions"
+              web_icon="subscription_catalog,static/description/icon.png"
+              sequence="10"/>
+
+    <!-- Catalog / Configuration Submenu -->
+    <menuitem id="menu_subscription_catalog"
+              name="Catalog &amp; Configuration"
+              parent="menu_subscription_root"
+              sequence="50"
+              groups="subscription_catalog.group_subscription_user"/>
+</odoo>
