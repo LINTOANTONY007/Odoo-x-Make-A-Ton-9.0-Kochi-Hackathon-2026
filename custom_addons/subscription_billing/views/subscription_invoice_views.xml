@@ -144,7 +144,7 @@
                 <filter name="filter_overdue" string="Overdue Invoices" domain="[('is_overdue', '=', True)]"/>
                 <filter name="filter_paid" string="Fully Paid" domain="[('state', '=', 'paid')]"/>
                 <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
                     <filter name="group_date" string="Invoice Month" context="{'group_by': 'invoice_date:month'}"/>

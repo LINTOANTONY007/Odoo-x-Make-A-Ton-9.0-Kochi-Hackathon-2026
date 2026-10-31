@@ -8,29 +8,30 @@
             <field name="sequence">20</field>
         </record>
 
-    <!-- Odoo 19 Privilege Record -->
-    <record model="res.groups.privilege" id="res_groups_privilege_subscription">
-        <field name="name">Subscriptions</field>
-        <field name="category_id" ref="module_category_subscription_management"/>
-        <field name="sequence">10</field>
-    </record>
+        <!-- Odoo 19 Privilege Record -->
+        <record model="res.groups.privilege" id="res_groups_privilege_subscription">
+            <field name="name">Subscriptions</field>
+            <field name="category_id" ref="module_category_subscription_management"/>
+            <field name="sequence">10</field>
+        </record>
 
-    <!-- Internal Staff Group (User) -->
-    <record id="group_subscription_user" model="res.groups">
-        <field name="name">User</field>
-        <field name="sequence">10</field>
-        <field name="privilege_id" ref="res_groups_privilege_subscription"/>
-        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        <field name="comment">Internal staff handling day-to-day subscription operations with limited access.</field>
-    </record>
+        <!-- Internal Staff Group (User) -->
+        <record id="group_subscription_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="sequence">10</field>
+            <field name="privilege_id" ref="res_groups_privilege_subscription"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Internal staff handling day-to-day subscription operations with limited access.</field>
+        </record>
 
-    <!-- Administrator Group -->
-    <record id="group_subscription_admin" model="res.groups">
-        <field name="name">Administrator</field>
-        <field name="sequence">20</field>
-        <field name="privilege_id" ref="res_groups_privilege_subscription"/>
-        <field name="implied_ids" eval="[(4, ref('group_subscription_user'))]"/>
-        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
-        <field name="comment">Admin controlling the entire subscription platform, products, plans, staff and discounts.</field>
-    </record>
+        <!-- Administrator Group -->
+        <record id="group_subscription_admin" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="sequence">20</field>
+            <field name="privilege_id" ref="res_groups_privilege_subscription"/>
+            <field name="implied_ids" eval="[(4, ref('group_subscription_user'))]"/>
+            <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+            <field name="comment">Admin controlling the entire subscription platform, products, plans, staff and discounts.</field>
+        </record>
+    </data>
 </odoo>
