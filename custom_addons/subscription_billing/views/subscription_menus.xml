@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Billing & Invoicing Submenu -->
+    <menuitem id="menu_subscription_billing"
+              name="Billing &amp; Invoices"
+              parent="subscription_catalog.menu_subscription_root"
+              sequence="30"/>
+
+    <menuitem id="menu_subscription_invoices"
+              name="Invoices"
+              parent="menu_subscription_billing"
+              action="action_subscription_invoice_all"
+              sequence="10"/>
+
+    <menuitem id="menu_subscription_payments"
+              name="Payments"
+              parent="menu_subscription_billing"
+              action="action_subscription_payment_all"
+              sequence="20"/>
+
+    <!-- Reporting Submenu -->
+    <menuitem id="menu_subscription_reporting"
+              name="Finance &amp; Reports"
+              parent="subscription_catalog.menu_subscription_root"
+              sequence="40"/>
+
+    <menuitem id="menu_subscription_finance_dashboard"
+              name="Finance Lead Dashboard"
+              parent="menu_subscription_reporting"
+              action="action_subscription_finance_dashboard"
+              sequence="10"/>
+
+    <!-- Configuration / Rules under Catalog -->
+    <menuitem id="menu_subscription_discounts"
+              name="Discount Rules"
+              parent="subscription_catalog.menu_subscription_catalog"
+              action="action_subscription_discount"
+              sequence="40"
+              groups="subscription_catalog.group_subscription_admin"/>
+
+    <menuitem id="menu_subscription_taxes"
+              name="Tax Rules"
+              parent="subscription_catalog.menu_subscription_catalog"
+              action="action_subscription_tax"
+              sequence="50"
+              groups="subscription_catalog.group_subscription_admin"/>
+</odoo>
