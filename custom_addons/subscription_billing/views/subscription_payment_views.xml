@@ -62,7 +62,7 @@
                 <field name="invoice_id"/>
                 <field name="partner_id"/>
                 <field name="payment_method"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_method" string="Payment Method" context="{'group_by': 'payment_method'}"/>
                     <filter name="group_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
                     <filter name="group_date" string="Date" context="{'group_by': 'payment_date:month'}"/>

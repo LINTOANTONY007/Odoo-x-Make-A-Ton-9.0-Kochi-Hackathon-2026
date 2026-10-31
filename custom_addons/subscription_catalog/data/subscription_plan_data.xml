@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sample Plans -->
+        <record id="plan_monthly_standard" model="subscription.plan">
+            <field name="name">Monthly Standard Plan</field>
+            <field name="code">PLAN-MTH-STD</field>
+            <field name="billing_frequency">monthly</field>
+            <field name="billing_interval_count">1</field>
+            <field name="cost">49.00</field>
+            <field name="min_quantity">1.0</field>
+            <field name="auto_close_at_end">0</field>
+            <field name="allow_early_close">1</field>
+            <field name="allow_pause">1</field>
+            <field name="allow_renewal">1</field>
+            <field name="description"><![CDATA[<p>Standard monthly subscription for small shops and teams. Includes core business software and standard support.</p>]]></field>
+        </record>
+
+        <record id="plan_yearly_enterprise" model="subscription.plan">
+            <field name="name">Yearly Enterprise Contract</field>
+            <field name="code">PLAN-YR-ENT</field>
+            <field name="billing_frequency">yearly</field>
+            <field name="billing_interval_count">1</field>
+            <field name="cost">499.00</field>
+            <field name="min_quantity">5.0</field>
+            <field name="auto_close_at_end">0</field>
+            <field name="allow_early_close">0</field>
+            <field name="allow_pause">0</field>
+            <field name="allow_renewal">1</field>
+            <field name="description"><![CDATA[<p>Annual enterprise plan billed once per year. Designed for large companies on yearly commitments with dedicated onboarding.</p>]]></field>
+        </record>
+    </data>
+</odoo>

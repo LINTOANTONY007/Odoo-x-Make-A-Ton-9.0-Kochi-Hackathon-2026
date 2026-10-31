@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Subscriptions Sales Submenu -->
+    <menuitem id="menu_subscription_sales"
+              name="Subscriptions"
+              parent="subscription_catalog.menu_subscription_root"
+              sequence="20"/>
+
+    <menuitem id="menu_subscription_all"
+              name="All Subscriptions"
+              parent="menu_subscription_sales"
+              action="action_subscription_subscription_all"
+              sequence="10"/>
+
+    <menuitem id="menu_subscription_quotations"
+              name="Quotations"
+              parent="menu_subscription_sales"
+              action="action_subscription_quotations"
+              sequence="20"/>
+
+    <!-- Quotation Templates under Catalog -->
+    <menuitem id="menu_subscription_quotation_template"
+              name="Quotation Templates"
+              parent="subscription_catalog.menu_subscription_catalog"
+              action="action_subscription_quotation_template"
+              sequence="30"/>
+</odoo>
