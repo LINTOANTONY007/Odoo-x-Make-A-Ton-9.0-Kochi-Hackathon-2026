@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 
 class SubscriptionInvoiceLine(models.Model):
@@ -86,3 +85,25 @@ class SubscriptionInvoiceLine(models.Model):
         for line in self:
             if line.quantity <= 0:
                 raise ValidationError(_("Invoice line quantity must be greater than zero."))
+
+    def write(self, vals):
+        for line in self:
+            if line.invoice_id.state != 'draft':
+                raise UserError(_("You cannot modify line quantities, prices, or taxes on a confirmed or processed invoice."))
+        return super().write(vals)
+
+    def unlink(self):
+        for line in self:
+            if line.invoice_id.state != 'draft':
+                raise UserError(_("You cannot delete lines from a confirmed or processed invoice."))
+        return super().unlink()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            inv_id = vals.get('invoice_id')
+            if inv_id:
+                inv = self.env['subscription.invoice'].browse(inv_id)
+                if inv.state != 'draft':
+                    raise UserError(_("You cannot add lines to a confirmed or processed invoice."))
+        return super().create(vals_list)

@@ -17,7 +17,6 @@
         'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
         'data/ir_cron_data.xml',
-        'views/subscription_tax_views.xml',
         'views/subscription_discount_views.xml',
         'views/subscription_invoice_views.xml',
         'views/subscription_payment_views.xml',

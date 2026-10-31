@@ -7,7 +7,7 @@ class ProductTemplate(models.Model):
 
     is_subscription = fields.Boolean(
         string='Is Subscription Product',
-        default=True,
+        default=False,
         help="Check this if this product or service is sold on a recurring subscription basis."
     )
     subscription_plan_ids = fields.Many2many(
@@ -15,7 +15,8 @@ class ProductTemplate(models.Model):
         'subscription_plan_product_rel',
         'product_id',
         'plan_id',
-        string='Available Plans'
+        string='Available Plans',
+        domain="[('is_start_date_reached', '=', True), ('is_end_date_valid', '=', True)]"
     )
     brand = fields.Char(
         string='Brand / Variant Tag',

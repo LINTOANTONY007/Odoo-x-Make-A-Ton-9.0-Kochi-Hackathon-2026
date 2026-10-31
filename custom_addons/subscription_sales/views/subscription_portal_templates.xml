@@ -1,13 +1,378 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- Portal Breadcrumbs for Subscriptions -->
+    <template id="portal_my_home_menu_subscription" name="Portal layout : subscription menu entries" inherit_id="portal.portal_breadcrumbs" priority="20">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'subscriptions' or subscription" t-attf-class="breadcrumb-item #{'active ' if not subscription else ''}">
+                <a t-if="subscription" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
+                <t t-else="">Subscriptions</t>
+            </li>
+            <li t-if="subscription" class="breadcrumb-item active">
+                <span t-field="subscription.name"/>
+            </li>
+        </xpath>
+    </template>
+
     <!-- Portal Home Entry for Subscriptions -->
     <template id="portal_my_home_subscriptions" name="Portal My Home : Subscriptions" inherit_id="portal.portal_my_home" priority="20">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Subscriptions</t>
+                <t t-set="text">View and manage your subscriptions</t>
                 <t t-set="url" t-value="'/my/subscriptions'"/>
                 <t t-set="placeholder_count" t-value="'subscription_count'"/>
+                <t t-set="config_card" t-value="True"/>
             </t>
         </xpath>
     </template>
+
+    <!-- Portal: Subscriptions List View -->
+    <template id="portal_my_subscriptions" name="My Subscriptions">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Subscriptions</t>
+            </t>
+
+            <div t-if="not subscriptions" class="alert alert-warning" role="alert">
+                There are currently no subscriptions found for your account.
+            </div>
+
+            <t t-if="subscriptions" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Subscription #</th>
+                        <th>Plan</th>
+                        <th class="text-end">Start Date</th>
+                        <th class="text-end">Next Billing</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Recurring Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="subscriptions" t-as="sub">
+                        <tr>
+                            <td>
+                                <a t-att-href="sub.get_portal_url()">
+                                    <t t-out="sub.name"/>
+                                </a>
+                            </td>
+                            <td>
+                                <span t-field="sub.plan_id.name"/>
+                            </td>
+                            <td class="text-end">
+                                <span t-field="sub.start_date" t-options='{"widget": "date"}'/>
+                            </td>
+                            <td class="text-end">
+                                <span t-field="sub.next_billing_date" t-options='{"widget": "date"}'/>
+                            </td>
+                            <td class="text-center">
+                                <span t-if="sub.stage == 'draft'" class="badge rounded-pill text-bg-secondary">Draft</span>
+                                <span t-elif="sub.stage == 'quotation'" class="badge rounded-pill text-bg-info">Quotation</span>
+                                <span t-elif="sub.stage == 'confirmed'" class="badge rounded-pill text-bg-primary">Confirmed</span>
+                                <span t-elif="sub.stage == 'active'" class="badge rounded-pill text-bg-success">Active</span>
+                                <span t-elif="sub.stage == 'paused'" class="badge rounded-pill text-bg-warning">Paused</span>
+                                <span t-elif="sub.stage == 'closed'" class="badge rounded-pill text-bg-danger">Closed</span>
+                            </td>
+                            <td class="text-end">
+                                <span t-field="sub.amount_total" t-options='{"widget": "monetary", "display_currency": sub.currency_id}'/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </t>
+        </t>
+    </template>
+
+    <!-- Portal: Subscription Detail View Page -->
+    <template id="portal_subscription_page" name="Subscription Portal Page" inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <t t-set="o_portal_fullwidth_alert" groups="subscription_catalog.group_subscription_user">
+                <t t-call="portal.portal_back_in_edit_mode"/>
+            </t>
+
+            <div class="row mt16 o_portal_subscription_sidebar">
+                <!-- Sidebar -->
+                <t t-call="portal.portal_record_sidebar">
+                    <t t-set="classes" t-value="'col-lg-4 col-xxl-3 d-print-none'"/>
+
+                    <t t-set="title">
+                        <div class="d-flex flex-column align-items-start">
+                            <span class="small text-muted text-uppercase mb-1">Recurring Total</span>
+                            <h2 t-field="subscription.amount_total" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}' class="mb-0 text-break"/>
+                        </div>
+                    </t>
+
+                    <t t-set="entries">
+                        <div class="d-flex flex-column gap-3 mt-3">
+                            <!-- Status Badge -->
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light border">
+                                <span class="fw-bold">Status:</span>
+                                <span t-if="subscription.stage == 'draft'" class="badge text-bg-secondary fs-6">Draft</span>
+                                <span t-elif="subscription.stage == 'quotation'" class="badge text-bg-info fs-6">Quotation</span>
+                                <span t-elif="subscription.stage == 'confirmed'" class="badge text-bg-primary fs-6">Confirmed</span>
+                                <span t-elif="subscription.stage == 'active'" class="badge text-bg-success fs-6">Active</span>
+                                <span t-elif="subscription.stage == 'paused'" class="badge text-bg-warning fs-6">Paused</span>
+                                <span t-elif="subscription.stage == 'closed'" class="badge text-bg-danger fs-6">Closed</span>
+                            </div>
+
+                            <!-- Customer Actions -->
+                            <div class="d-flex flex-column gap-2" id="subscription_portal_actions">
+                                <!-- Confirm Quotation -->
+                                <form t-if="subscription.stage in ('draft', 'quotation')"
+                                      t-attf-action="/my/subscriptions/#{subscription.id}/confirm" method="post">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="access_token" t-att-value="access_token"/>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fa fa-check me-1"/> Confirm Subscription
+                                    </button>
+                                </form>
+
+                                <!-- Pause Action -->
+                                <button t-if="subscription.stage == 'active' and (not subscription.plan_id or subscription.plan_id.allow_pause)"
+                                        type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#modal_pause_subscription">
+                                    <i class="fa fa-pause me-1"/> Pause Subscription
+                                </button>
+
+                                <!-- Resume Action -->
+                                <form t-if="subscription.stage == 'paused'"
+                                      t-attf-action="/my/subscriptions/#{subscription.id}/resume" method="post">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="access_token" t-att-value="access_token"/>
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fa fa-play me-1"/> Resume Subscription
+                                    </button>
+                                </form>
+
+                                <!-- Close Action -->
+                                <button t-if="subscription.stage in ('confirmed', 'active', 'paused') and (not subscription.plan_id or subscription.plan_id.allow_early_close or not subscription.expiry_date)"
+                                        type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modal_close_subscription">
+                                    <i class="fa fa-times me-1"/> Close Subscription
+                                </button>
+                            </div>
+
+                            <!-- Salesperson Contact -->
+                            <div t-if="subscription.user_id" class="mt-2">
+                                <h6 class="small text-muted text-uppercase mb-2">Your Account Manager</h6>
+                                <t t-call="portal.portal_my_contact">
+                                    <t t-set="_contactAvatar" t-value="image_data_uri(subscription.user_id.avatar_128)"/>
+                                    <t t-set="_contactName" t-value="subscription.user_id.name"/>
+                                    <t t-set="_contactLink" t-value="True"/>
+                                    <div t-field="subscription.user_id" t-options='{"widget": "contact", "fields": ["phone", "email"], "no_marker": False}'/>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- Modals for Pause & Close -->
+                <!-- Modal: Pause -->
+                <div class="modal fade" id="modal_pause_subscription" tabindex="-1" aria-labelledby="modalPauseLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form t-attf-action="/my/subscriptions/#{subscription.id}/pause" method="post" class="modal-content">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="access_token" t-att-value="access_token"/>
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalPauseLabel">Pause Subscription</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to temporarily suspend your subscription <strong><t t-out="subscription.name"/></strong>?</p>
+                                <p class="text-muted small">You can resume your subscription whenever you are ready.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-warning">Pause Now</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal: Close -->
+                <div class="modal fade" id="modal_close_subscription" tabindex="-1" aria-labelledby="modalCloseLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form t-attf-action="/my/subscriptions/#{subscription.id}/close" method="post" class="modal-content">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="access_token" t-att-value="access_token"/>
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger" id="modalCloseLabel">Close Subscription</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to terminate subscription <strong><t t-out="subscription.name"/></strong>?</p>
+                                <div class="mb-3">
+                                    <label for="close_reason" class="form-label">Please let us know the reason for closing (optional):</label>
+                                    <textarea id="close_reason" name="close_reason" class="form-control" rows="3" placeholder="Reason for cancellation..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Subscription</button>
+                                <button type="submit" class="btn btn-danger">Confirm Closure</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Page Main Content -->
+                <div id="subscription_content" class="col-12 col-lg-8 col-xxl-9">
+                    <!-- Action feedback alerts -->
+                    <div t-if="success == 'confirmed'" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa fa-check-circle me-1"/> Your subscription has been successfully confirmed!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div t-if="success == 'paused'" class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fa fa-pause-circle me-1"/> Your subscription has been paused.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div t-if="success == 'resumed'" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa fa-play-circle me-1"/> Your subscription is now active and running.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div t-if="warning == 'closed'" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa fa-info-circle me-1"/> This subscription has been closed.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-body">
+                            <!-- Subscription Header -->
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                                <div>
+                                    <h2 class="mb-1">
+                                        Subscription <span t-field="subscription.name"/>
+                                    </h2>
+                                    <span class="text-muted">
+                                        Plan: <strong t-field="subscription.plan_id.name"/>
+                                    </span>
+                                </div>
+                                <div>
+                                    <span t-if="subscription.stage == 'draft'" class="badge rounded-pill text-bg-secondary p-2 px-3">Draft</span>
+                                    <span t-elif="subscription.stage == 'quotation'" class="badge rounded-pill text-bg-info p-2 px-3">Quotation</span>
+                                    <span t-elif="subscription.stage == 'confirmed'" class="badge rounded-pill text-bg-primary p-2 px-3">Confirmed</span>
+                                    <span t-elif="subscription.stage == 'active'" class="badge rounded-pill text-bg-success p-2 px-3">Active</span>
+                                    <span t-elif="subscription.stage == 'paused'" class="badge rounded-pill text-bg-warning p-2 px-3">Paused</span>
+                                    <span t-elif="subscription.stage == 'closed'" class="badge rounded-pill text-bg-danger p-2 px-3">Closed</span>
+                                </div>
+                            </div>
+
+                            <!-- Subscription Info Grid -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-2">
+                                    <strong class="d-block text-muted small text-uppercase">Customer</strong>
+                                    <span t-field="subscription.partner_id.name"/><br/>
+                                    <span t-if="subscription.partner_id.email" class="text-muted" t-field="subscription.partner_id.email"/><br/>
+                                    <span t-if="subscription.partner_id.phone" class="text-muted" t-field="subscription.partner_id.phone"/>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <strong class="d-block text-muted small text-uppercase">Billing Cadence</strong>
+                                    <span>
+                                        Every <span t-field="subscription.plan_id.billing_interval_count"/>
+                                        <span t-field="subscription.plan_id.billing_frequency"/>
+                                    </span>
+                                    <div class="mt-1">
+                                        <span class="text-muted small">Payment Terms: </span>
+                                        <span t-field="subscription.payment_terms"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mt-2">
+                                    <strong class="d-block text-muted small text-uppercase">Start Date</strong>
+                                    <span t-field="subscription.start_date" t-options='{"widget": "date"}'/>
+                                </div>
+                                <div class="col-md-4 mt-2">
+                                    <strong class="d-block text-muted small text-uppercase">Expiry Date</strong>
+                                    <span t-if="subscription.expiry_date" t-field="subscription.expiry_date" t-options='{"widget": "date"}'/>
+                                    <span t-else="" class="text-muted">Ongoing (No Expiry)</span>
+                                </div>
+                                <div class="col-md-4 mt-2">
+                                    <strong class="d-block text-muted small text-uppercase">Next Billing Date</strong>
+                                    <span t-if="subscription.next_billing_date" t-field="subscription.next_billing_date" t-options='{"widget": "date"}'/>
+                                    <span t-else="" class="text-muted">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Subscription Lines Table -->
+                            <h4 class="mb-3">Products &amp; Add-ons</h4>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-sm">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Product / Service</th>
+                                            <th>Description</th>
+                                            <th class="text-end">Quantity</th>
+                                            <th class="text-end">Unit Price</th>
+                                            <th class="text-end">Tax %</th>
+                                            <th class="text-end">Subtotal</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="subscription.line_ids" t-as="line">
+                                            <tr>
+                                                <td class="fw-bold">
+                                                    <span t-field="line.product_id.name"/>
+                                                </td>
+                                                <td>
+                                                    <span t-field="line.name"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-field="line.quantity"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-field="line.unit_price" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-field="line.tax_percent"/>%
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-field="line.price_subtotal" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                                </td>
+                                                <td class="text-end fw-bold">
+                                                    <span t-field="line.price_total" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Financial Totals Summary -->
+                            <div class="row justify-content-end">
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Untaxed Amount:</span>
+                                            <span t-field="subscription.amount_untaxed" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Taxes:</span>
+                                            <span t-field="subscription.amount_tax" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                        </div>
+                                        <div class="d-flex justify-content-between border-top pt-2 fw-bold fs-5">
+                                            <span>Recurring Total:</span>
+                                            <span t-field="subscription.amount_total" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms & Conditions -->
+                            <div t-if="subscription.terms_conditions" class="mt-4 pt-3 border-top">
+                                <h5>Terms &amp; Conditions</h5>
+                                <div t-field="subscription.terms_conditions"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Communication Chatter -->
+                    <div id="subscription_communication" class="mt-4">
+                        <h4>Communication History</h4>
+                        <t t-call="portal.message_thread"/>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
 </odoo>

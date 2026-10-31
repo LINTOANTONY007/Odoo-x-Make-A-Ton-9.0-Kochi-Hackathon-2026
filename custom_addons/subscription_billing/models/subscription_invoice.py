@@ -58,10 +58,11 @@ class SubscriptionInvoice(models.Model):
     )
     payment_terms = fields.Char(string='Payment Terms')
 
-    # Status: Draft -> Confirmed -> Paid (and Cancelled)
+    # Status: Draft -> Confirmed -> Partial -> Paid (and Cancelled)
     state = fields.Selection([
         ('draft', 'Draft'),
         ('confirmed', 'Confirmed'),
+        ('partial', 'Partially Paid'),
         ('paid', 'Paid'),
         ('cancelled', 'Cancelled'),
     ], string='Status', default='draft', required=True, tracking=True, index=True)
@@ -138,6 +139,14 @@ class SubscriptionInvoice(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code('subscription.invoice') or _('Draft')
         return super().create(vals_list)
 
+    def write(self, vals):
+        sensitive_fields = {'line_ids', 'partner_id', 'company_id', 'invoice_date', 'due_date', 'applied_discount_id'}
+        if sensitive_fields.intersection(vals.keys()):
+            for inv in self:
+                if inv.state != 'draft':
+                    raise UserError(_("You cannot modify invoice lines, customer, or accounting dates on a confirmed or processed invoice."))
+        return super().write(vals)
+
     @api.depends('line_ids.price_subtotal', 'line_ids.price_total', 'line_ids.discount_amount')
     def _compute_amounts(self):
         for inv in self:
@@ -146,22 +155,20 @@ class SubscriptionInvoice(models.Model):
             inv.amount_tax = sum(inv.line_ids.mapped('price_total')) - inv.amount_untaxed
             inv.amount_total = sum(inv.line_ids.mapped('price_total'))
 
-    @api.depends('amount_total', 'payment_ids.amount', 'state')
+    @api.depends('amount_total', 'payment_ids.amount')
     def _compute_payment_totals(self):
         for inv in self:
             total_paid = sum(inv.payment_ids.mapped('amount'))
             inv.amount_paid = total_paid
             inv.amount_due = max(0.0, inv.amount_total - total_paid)
-            if inv.state == 'confirmed' and inv.amount_total > 0 and inv.amount_due <= 0.001:
-                inv.state = 'paid'
 
     @api.depends('due_date', 'state', 'amount_due')
     def _compute_is_overdue(self):
         today = fields.Date.context_today(self)
         for inv in self:
-            inv.is_overdue = (inv.state == 'confirmed') and (inv.due_date < today) and (inv.amount_due > 0)
+            inv.is_overdue = (inv.state in ('confirmed', 'partial')) and (inv.due_date < today) and (inv.amount_due > 0)
 
-    # Actions: Confirm, Cancel, Send, Print, Register Payment
+    # Actions: Confirm, Mark as Done, Cancel, Send, Print
     def action_confirm(self):
         for inv in self:
             if inv.state != 'draft':
@@ -170,6 +177,23 @@ class SubscriptionInvoice(models.Model):
                 raise ValidationError(_("Invoice must have lines before confirmation."))
             inv.state = 'confirmed'
             inv.message_post(body=_("Invoice %s confirmed.") % inv.name)
+
+    def action_mark_as_done(self):
+        for inv in self:
+            if inv.state not in ('confirmed', 'partial'):
+                raise UserError(_("Only confirmed or partially paid invoices can be marked as done."))
+            if inv.amount_paid <= 0:
+                raise ValidationError(_("Please record a payment amount before marking the invoice as done."))
+            if inv.amount_due > 0.001:
+                inv.state = 'partial'
+                inv.message_post(body=_("Invoice %s marked as Partially Paid. Total Paid: %s, Remaining Due: %s.") % (
+                    inv.name, inv.amount_paid, inv.amount_due
+                ))
+            else:
+                inv.state = 'paid'
+                inv.message_post(body=_("Invoice %s marked as Paid. Full payment received: %s.") % (
+                    inv.name, inv.amount_paid
+                ))
 
     def action_cancel(self):
         for inv in self:

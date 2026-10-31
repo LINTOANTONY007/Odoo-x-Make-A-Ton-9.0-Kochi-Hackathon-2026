@@ -12,6 +12,7 @@ class SubscriptionQuotationTemplate(models.Model):
         'subscription.plan',
         string='Default Plan',
         required=True,
+        domain="[('is_start_date_reached', '=', True), ('is_end_date_valid', '=', True)]",
         help="Pre-configured plan applied when using this template."
     )
     validity_days = fields.Integer(

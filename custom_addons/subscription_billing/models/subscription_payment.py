@@ -82,3 +82,9 @@ class SubscriptionPayment(models.Model):
         for pay in self:
             if pay.amount <= 0:
                 raise ValidationError(_("Payment amount must be strictly greater than zero."))
+
+    @api.constrains('invoice_id')
+    def _check_invoice_state(self):
+        for pay in self:
+            if pay.invoice_id and pay.invoice_id.state in ('draft', 'cancelled'):
+                raise ValidationError(_("You cannot record payments on a draft or cancelled invoice."))

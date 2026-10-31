@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Subscription Tax List View -->
+    <record id="view_subscription_tax_tree" model="ir.ui.view">
+        <field name="name">subscription.tax.list</field>
+        <field name="model">subscription.tax</field>
+        <field name="arch" type="xml">
+            <list string="Subscription Tax Rules">
+                <field name="name"/>
+                <field name="tax_type"/>
+                <field name="amount"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Subscription Tax Form View -->
+    <record id="view_subscription_tax_form" model="ir.ui.view">
+        <field name="name">subscription.tax.form</field>
+        <field name="model">subscription.tax</field>
+        <field name="arch" type="xml">
+            <form string="Subscription Tax Rule">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. VAT 15% or Standard Sales Tax"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="tax_type"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tax Window Action -->
+    <record id="action_subscription_tax" model="ir.actions.act_window">
+        <field name="name">Tax Rules</field>
+        <field name="res_model">subscription.tax</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu under Catalog -->
+    <menuitem id="menu_subscription_taxes"
+              name="Tax Rules"
+              parent="subscription_catalog.menu_subscription_catalog"
+              action="action_subscription_tax"
+              sequence="50"
+              groups="subscription_catalog.group_subscription_admin"/>
+</odoo>
