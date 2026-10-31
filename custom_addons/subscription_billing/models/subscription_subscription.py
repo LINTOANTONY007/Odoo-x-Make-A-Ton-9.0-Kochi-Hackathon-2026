@@ -76,12 +76,32 @@ class SubscriptionSubscription(models.Model):
                 if s_line.product_id not in discount_rule.product_ids:
                     line_disc = 0.0
 
+            # Pass tax_ids from subscription line to invoice line
+            tax_ids_commands = []
+            if s_line.tax_ids:
+                tax_ids_commands = [(6, 0, s_line.tax_ids.ids)]
+            elif s_line.tax_percent > 0:
+                matched_tax = self.env['subscription.tax'].search([
+                    ('tax_type', '=', 'percent'),
+                    ('amount', '=', s_line.tax_percent),
+                    ('company_id', '=', self.company_id.id),
+                ], limit=1)
+                if not matched_tax:
+                    matched_tax = self.env['subscription.tax'].create({
+                        'name': f"{s_line.tax_percent:g}%",
+                        'tax_type': 'percent',
+                        'amount': s_line.tax_percent,
+                        'company_id': self.company_id.id,
+                    })
+                tax_ids_commands = [(6, 0, [matched_tax.id])]
+
             invoice_lines.append((0, 0, {
                 'product_id': s_line.product_id.id,
                 'name': s_line.name,
                 'quantity': s_line.quantity,
                 'unit_price': s_line.unit_price,
                 'discount': line_disc,
+                'tax_ids': tax_ids_commands,
             }))
 
         invoice_vals = {
