@@ -12,6 +12,7 @@
         'product',
         'portal',
         'auth_signup',
+        'contacts',
     ],
     'data': [
         'security/subscription_security.xml',
