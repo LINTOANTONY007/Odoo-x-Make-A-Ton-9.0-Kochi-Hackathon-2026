@@ -136,6 +136,16 @@ class SubscriptionSubscription(models.Model):
             sub.amount_tax = sum(sub.line_ids.mapped('price_total')) - sub.amount_untaxed
             sub.amount_total = sum(sub.line_ids.mapped('price_total'))
 
+    def _compute_access_url(self):
+        super()._compute_access_url()
+        for sub in self:
+            sub.access_url = f'/my/subscriptions/{sub.id}'
+
+    def _get_portal_return_action(self):
+        """ Return the action used to display the subscription in backend. """
+        self.ensure_one()
+        return self.env.ref('subscription_sales.action_subscription_subscription_all')
+
     @api.onchange('template_id')
     def _onchange_template_id(self):
         if self.template_id:
